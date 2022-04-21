@@ -1,3 +1,12 @@
+mod cli;
+pub mod debug;
+
+use clap::Parser;
+
+#[cfg(debug_assertions)]
+use debug::Messages;
+
+
 type Voter = Vec<i32>;
 type Table = Vec<Voter>;
 
@@ -28,7 +37,15 @@ fn gain(data: &Table, attribute: usize) -> f32 {
 	b(positive / total) - remainder(data, attribute)
 }
 
+#[cfg(debug_assertions)]
+static mut DBG: Option<Messages> = None;
+
 fn main() {
+	// Parse command line arguments and flags
+	let args = crate::cli::Args::parse();
+	// Set debug level based on the debug flag
+	debug_level!(DBG, args.debug);
+
 	let data = vec![
 		vec![0,0,1,1,0,1,1,0,0,0,0,0,0,1,1,1,1],
 		vec![1,0,1,0,1,1,1,0,0,0,0,0,1,1,1,0,1],
@@ -274,10 +291,6 @@ fn main() {
 
 	info_per_attribute.sort_unstable_by_key(|(_, g)| (g * 50000.0) as u16);
 	let (best_attribute, best_gain) = info_per_attribute[info_per_attribute.len()-1];
-
-	// let republicans = (data.len() as i32 - data.iter().fold(0, |a, b| a + b[0])) as f32;
-
-	// println!("{republicans}");
 
 	println!("Best split: attribute {best_attribute}, with gain: {best_gain}");
 }
